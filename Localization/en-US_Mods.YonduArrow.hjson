@@ -1,0 +1,8 @@
+Items: {
+	YonduArrow: {
+		DisplayName: Yondu Arrow
+		Tooltip: ""
+	}
+}
+
+Projectiles.YonduArrowProjectile.DisplayName: Yondu Arrow Projectile
