@@ -18,7 +18,7 @@ namespace YonduArrow.Content.Weapons
             Item.width = 26;
             Item.height = 26;
             Item.useTime = 15;
-            Item.useAnimation = 10;
+            Item.useAnimation = 1;
             Item.useStyle = ItemUseStyleID.Rapier;
             Item.noMelee = true;
             Item.channel = true; //Channel so that you can held the weapon [Important]
@@ -29,6 +29,24 @@ namespace YonduArrow.Content.Weapons
             Item.shoot = ModContent.ProjectileType<Content.Projectiles.YonduArrowProjectile>();
             Item.shootSpeed = 10f;
         }
+
+        public override bool CanUseItem(Player player)
+        {
+            // Prevent usage if player already has a Yondu arrow projectile
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile proj = Main.projectile[i];
+                if (proj.active &&
+                    proj.owner == player.whoAmI &&
+                    proj.type == ModContent.ProjectileType<Content.Projectiles.YonduArrowProjectile>())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public override void AddRecipes()
         {
             CreateRecipe()
