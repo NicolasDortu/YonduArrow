@@ -1,31 +1,35 @@
 ﻿using System;
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 
 namespace YonduArrow.Content.Weapons
 {
-    /// <summary>
-    /// it is a test
-    /// </summary>
     public class YonduArrow : ModItem
     {
         public override void SetDefaults()
         {
-            Item.damage = 25;
+            Item.damage = 35;
             Item.mana = 14;
-            Item.width = 26;
-            Item.height = 26;
+            Item.width = 72;
+            Item.height = 14;
             Item.useTime = 15;
             Item.useAnimation = 1;
             Item.useStyle = ItemUseStyleID.Rapier;
             Item.noMelee = true;
             Item.channel = true; //Channel so that you can held the weapon [Important]
             Item.knockBack = 8;
-            Item.value = Item.sellPrice(platinum: 50);
-            Item.rare = ItemRarityID.Master;
-            Item.UseSound = SoundID.Item9;
+            Item.value = Item.sellPrice(platinum: 5);
+            Item.rare = ItemRarityID.Purple;
+            Item.UseSound = new SoundStyle("YonduArrow/Content/Weapons/YonduWhistle")
+            {
+                Volume = 0.4f,
+                PitchVariance = 0.2f,
+                MaxInstances = 1,
+                PlayOnlyIfFocused = true,
+            };
             Item.shoot = ModContent.ProjectileType<Content.Projectiles.YonduArrowProjectile>();
             Item.shootSpeed = 10f;
         }
@@ -51,7 +55,19 @@ namespace YonduArrow.Content.Weapons
         {
             CreateRecipe()
                 .AddIngredient(ItemID.WoodenArrow, 100)
-                .AddTile(TileID.Anvils)
+                .AddIngredient(ItemID.FlamingArrow, 100)
+                .AddIngredient(ItemID.UnholyArrow, 100)
+                .AddIngredient(ItemID.JestersArrow, 100)
+                .AddIngredient(ItemID.HellfireArrow, 100)
+                .AddIngredient(ItemID.HolyArrow, 100)
+                .AddIngredient(ItemID.CursedArrow, 100)
+                .AddIngredient(ItemID.FrostburnArrow, 100)
+                .AddIngredient(ItemID.ChlorophyteArrow, 100)
+                .AddIngredient(ItemID.IchorArrow, 100)
+                .AddIngredient(ItemID.VenomArrow, 100)
+                .AddIngredient(ItemID.BoneArrow, 100)
+                .AddIngredient(ItemID.ShimmerArrow, 100)
+                .AddTile(TileID.MythrilAnvil)
                 .Register();
         }   
     }

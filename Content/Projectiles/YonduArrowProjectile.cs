@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Audio;
@@ -10,12 +11,9 @@ namespace YonduArrow.Content.Projectiles
 {
     public class YonduArrowProjectile : ModProjectile
     {
-        /// <summary>
         ///  TO DO: 
-        ///  smooth moving (check rainbow rod)
         ///  ability to ride the arrow
-        ///  Esthetic -> normal looking arrow with a red trail (if possible, make the red parts glows)
-        /// </summary>
+        ///  Continuous red trail starting at the bottom of the arrow
         public override void SetStaticDefaults()
         {
 
@@ -23,37 +21,73 @@ namespace YonduArrow.Content.Projectiles
 
         public override void SetDefaults()
         {
-            Projectile.width = 10;
-            Projectile.height = 10;
+            Projectile.width = 72;
+            Projectile.height = 14;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
-            Projectile.light = 0.1f;
-            //Projectile.aiStyle = 9;
+            Projectile.light = 1f;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
-            //DrawOriginOffsetX = 1;
         }
 
-        // public override Color? GetAlpha(Color lightColor) => new Color(255, 0, 0, 50);
+        public override void PostDraw(Color lightColor)
+        {
+            // Load the glowmask texture
+            Texture2D glowTexture = ModContent.Request<Texture2D>(
+                "YonduArrow/Content/Projectiles/YonduArrowProjectile_Glow",
+                ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+
+            // Smooth sinusoidal pulse
+            float sine = (float)Math.Sin(Main.GlobalTimeWrappedHourly * 2f);
+            float rawPulse = (sine + 1f) / 2f;
+            float easedPulse = rawPulse * rawPulse * (3f - 2f * rawPulse); // smoothstep easing
+            float intensity = MathHelper.Lerp(0.6f, 1.3f, easedPulse); // range of brightness
+
+            Color glowColor = new Color(
+                (int)(255 * intensity),
+                (int)(40 * intensity),
+                (int)(40 * intensity),
+                255
+            );
+
+            Main.EntitySpriteDraw(
+                glowTexture,
+                Projectile.Center - Main.screenPosition,
+                new Rectangle(0, 0, glowTexture.Width, glowTexture.Height),
+                glowColor,
+                Projectile.rotation,
+                new Vector2(glowTexture.Width / 2f, glowTexture.Height / 2f),
+                Projectile.scale,
+                SpriteEffects.None,
+                0
+            );
+        }
 
         public override void AI()
         {
-            // Play sound while moving
-            if (Projectile.soundDelay == 0 && Projectile.velocity.Length() > 2f)
-            {
-                Projectile.soundDelay = 10;
-                //SoundEngine.PlaySound(SoundID.Item9, Projectile.position);
-            }
-
-            // Dust effect (optional)
-            //if (Main.rand.NextBool(2))
+            //// Play sound while moving
+            //if (Projectile.soundDelay == 0 && Projectile.velocity.Length() > 2f)
             //{
-            //    Dust dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.GoldFlame, Projectile.velocity.X * 0.2f, Projectile.velocity.Y * 0.2f, 150, default, 1.2f);
-            //    dust.noGravity = true;
+            //    Projectile.soundDelay = 10;
+            //    SoundEngine.PlaySound(SoundID.Item39, Projectile.position);
             //}
 
-            // Lighting.AddLight(Projectile.Center, new Color(255, 0, 0, 255).ToVector3());
+            // Add red glow
+            // Lighting.AddLight(Projectile.Center, new Vector3(1.0f, 0.1f, 0.1f));
+
+            // Red trail behind
+            if (Main.rand.NextBool(1) && Projectile.velocity != Vector2.Zero)
+            {
+                Vector2 dustPos = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitX);
+
+                Dust dust = Dust.NewDustDirect(dustPos, 1, 1, DustID.VampireHeal);
+                dust.velocity = Vector2.Zero;
+                dust.scale = 1.0f;
+                dust.noGravity = true;
+                dust.fadeIn = 2.0f;
+                dust.color = new Color(255, 0, 0, 255);
+            }
 
             // Magic missile AI
             if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
@@ -93,13 +127,6 @@ namespace YonduArrow.Content.Projectiles
                         // Use stored rotation if velocity is zero
                         Projectile.rotation = Projectile.localAI[0];
                     }
-
-                    //Projectile.spriteDirection = Projectile.velocity.X >= 0 ? 1 : -1;
-
-                    //Projectile.rotation = Projectile.velocity.ToRotation();
-
-                    //if (Projectile.velocity == Vector2.Zero)
-                    //    Projectile.spriteDirection = Projectile.direction;
                 }
                 // if the player stop channeling
                 else if (Projectile.ai[0] == 0f)
