@@ -1,3 +1,3 @@
-displayName = Yondu&#39;s Arrow
+displayName = Yondu Arrow
 author = Nico
 version = 1.0

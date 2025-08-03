@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using YonduArrow.Content.Dusts;
 using static Terraria.ModLoader.ModContent;
 
 namespace YonduArrow.Content.Projectiles
@@ -13,7 +14,7 @@ namespace YonduArrow.Content.Projectiles
     {
         ///  TO DO: 
         ///  ability to ride the arrow
-        ///  Continuous red trail starting at the bottom of the arrow
+        ///  Fix the RedTrail -> Behind the arrow + Middle centered
         public override void SetStaticDefaults()
         {
 
@@ -21,7 +22,7 @@ namespace YonduArrow.Content.Projectiles
 
         public override void SetDefaults()
         {
-            Projectile.width = 72;
+            Projectile.width = 72; //108
             Projectile.height = 14;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
@@ -31,6 +32,7 @@ namespace YonduArrow.Content.Projectiles
             Projectile.ignoreWater = true;
         }
 
+        // Draw the projectile glowmask
         public override void PostDraw(Color lightColor)
         {
             // Load the glowmask texture
@@ -64,6 +66,8 @@ namespace YonduArrow.Content.Projectiles
             );
         }
 
+        private Vector2 lastDirection = Vector2.UnitX;
+
         public override void AI()
         {
             //// Play sound while moving
@@ -73,79 +77,98 @@ namespace YonduArrow.Content.Projectiles
             //    SoundEngine.PlaySound(SoundID.Item39, Projectile.position);
             //}
 
-            // Add red glow
-            // Lighting.AddLight(Projectile.Center, new Vector3(1.0f, 0.1f, 0.1f));
-
-            // Red trail behind
-            if (Main.rand.NextBool(1) && Projectile.velocity != Vector2.Zero)
+            // Draw the Red trail behind
+            if (Projectile.velocity.LengthSquared() > 0.001f)
             {
-                Vector2 dustPos = Projectile.Center - Projectile.velocity.SafeNormalize(Vector2.UnitX);
-
-                Dust dust = Dust.NewDustDirect(dustPos, 1, 1, DustID.VampireHeal);
-                dust.velocity = Vector2.Zero;
-                dust.scale = 1.0f;
-                dust.noGravity = true;
-                dust.fadeIn = 2.0f;
-                dust.color = new Color(255, 0, 0, 255);
+                lastDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             }
-
-            // Magic missile AI
-            if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
+            // Using the last known direction
             {
-                Player player = Main.player[Projectile.owner];
-                // behavior durring channeling
-                if (player.channel)
+                Vector2 direction = lastDirection;
+
+                int dustCount = 3;
+                float spacing = 6f;
+
+                if (Projectile.velocity != Vector2.Zero)
                 {
-                    float maxDistance = 18f;
-                    Vector2 toCursor = Main.MouseWorld - Projectile.Center;
-                    float dist = toCursor.Length();
-                    if (dist > maxDistance)
+                    for (int i = 0; i < dustCount; i++)
                     {
-                        toCursor *= maxDistance / dist;
-                    }
+                        Vector2 offset = direction * i * -spacing;
+                        Vector2 dustPos = Projectile.Center + offset;
 
-                    int vx = (int)(toCursor.X * 1000f);
-                    int ovx = (int)(Projectile.velocity.X * 1000f);
-                    int vy = (int)(toCursor.Y * 1000f);
-                    int ovy = (int)(Projectile.velocity.Y * 1000f);
+                        Dust dust = Dust.NewDustDirect(
+                            dustPos,
+                            0, 0,
+                            ModContent.DustType<RedTrail>()
+                        );
 
-                    if (vx != ovx || vy != ovy)
-                        Projectile.netUpdate = true;
-
-                    Projectile.velocity = toCursor;
-
-                    // face the arrow in the pointed direction
-                    if (Projectile.velocity != Vector2.Zero)
-                    {
-                        Projectile.rotation = Projectile.velocity.ToRotation();
-
-                        // Store last non-zero rotation in localAI[0]
-                        Projectile.localAI[0] = Projectile.rotation;
-                    }
-                    else
-                    {
-                        // Use stored rotation if velocity is zero
-                        Projectile.rotation = Projectile.localAI[0];
+                        dust.scale = 1f;
+                        dust.noGravity = true;
+                        dust.velocity = Vector2.Zero;
+                        dust.rotation = direction.ToRotation() + MathHelper.PiOver2;
+                        dust.fadeIn = 2.0f;
+                        dust.color = new Color(255, 0, 0, 255);
                     }
                 }
-                // if the player stop channeling
-                else if (Projectile.ai[0] == 0f)
-                {
-                    Projectile.netUpdate = true;
-                    float maxDistance = 14f;
-                    Vector2 toCursor = Main.MouseWorld - Projectile.Center;
-                    float dist = toCursor.Length();
-                    if (dist == 0f)
-                    {
-                        toCursor = Projectile.Center - player.Center;
-                        dist = toCursor.Length();
-                    }
-                    toCursor *= maxDistance / dist;
-                    Projectile.velocity = toCursor;
-                    Projectile.rotation = Projectile.velocity.ToRotation();
 
-                    Projectile.ai[0] = 1f;
-                    Projectile.timeLeft = 180;
+            // Similar to magic missile AI
+            if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
+                {
+                    Player player = Main.player[Projectile.owner];
+                    // behavior durring channeling
+                    if (player.channel)
+                    {
+                        float maxDistance = 18f;
+                        Vector2 toCursor = Main.MouseWorld - Projectile.Center;
+                        float dist = toCursor.Length();
+                        if (dist > maxDistance)
+                        {
+                            toCursor *= maxDistance / dist;
+                        }
+
+                        int vx = (int)(toCursor.X * 1000f);
+                        int ovx = (int)(Projectile.velocity.X * 1000f);
+                        int vy = (int)(toCursor.Y * 1000f);
+                        int ovy = (int)(Projectile.velocity.Y * 1000f);
+
+                        if (vx != ovx || vy != ovy)
+                            Projectile.netUpdate = true;
+
+                        Projectile.velocity = toCursor;
+
+                        // face the arrow in the pointed direction
+                        if (Projectile.velocity != Vector2.Zero)
+                        {
+                            Projectile.rotation = Projectile.velocity.ToRotation();
+
+                            // Store last non-zero rotation in localAI[0]
+                            Projectile.localAI[0] = Projectile.rotation;
+                        }
+                        else
+                        {
+                            // Use stored rotation if velocity is zero
+                            Projectile.rotation = Projectile.localAI[0];
+                        }
+                    }
+                    // if the player stop channeling
+                    else if (Projectile.ai[0] == 0f)
+                    {
+                        Projectile.netUpdate = true;
+                        float maxDistance = 14f;
+                        Vector2 toCursor = Main.MouseWorld - Projectile.Center;
+                        float dist = toCursor.Length();
+                        if (dist == 0f)
+                        {
+                            toCursor = Projectile.Center - player.Center;
+                            dist = toCursor.Length();
+                        }
+                        toCursor *= maxDistance / dist;
+                        Projectile.velocity = toCursor;
+                        Projectile.rotation = Projectile.velocity.ToRotation();
+
+                        Projectile.ai[0] = 1f;
+                        Projectile.timeLeft = 180;
+                    }
                 }
             }
         }
@@ -180,17 +203,5 @@ namespace YonduArrow.Content.Projectiles
 
             return false;
         }
-
-        //public override void OnKill(int timeLeft)
-        //{
-        //    SoundEngine.PlaySound(SoundID.Dig, Projectile.position); // Plays the basic sound most projectiles make when hitting blocks.
-        //    for (int i = 0; i < 5; i++) // Creates a splash of dust around the position the projectile dies.
-        //    {
-        //        Dust dust = Dust.NewDustDirect(Projectile.position, Projectile.width, Projectile.height, DustID.Silver);
-        //        dust.noGravity = true;
-        //        dust.velocity *= 1.5f;
-        //        dust.scale *= 0.9f;
-        //    }
-        //}
     }
 }

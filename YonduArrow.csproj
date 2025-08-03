@@ -5,7 +5,7 @@
 
 	<!-- General -->
 	<PropertyGroup>
-		
+	  <Platforms>AnyCPU;x64</Platforms>
 	</PropertyGroup>
 
 	<!-- References -->

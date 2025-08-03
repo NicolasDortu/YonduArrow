@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.ModLoader;
 
 namespace YonduArrow.Content.Dusts
 {
-    internal class RedTrail
+    public class RedTrail : ModDust
     {
+        public override void SetStaticDefaults()
+        {
+            base.SetStaticDefaults();
+        }
     }
 }
