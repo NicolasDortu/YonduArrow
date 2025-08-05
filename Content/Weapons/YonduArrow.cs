@@ -31,7 +31,15 @@ namespace YonduArrow.Content.Weapons
                 PlayOnlyIfFocused = true,
             };
             Item.shoot = ModContent.ProjectileType<Content.Projectiles.YonduArrowProjectile>();
-            Item.shootSpeed = 10f;
+            Item.shootSpeed = 5f;
+        }
+
+        public override void ModifyWeaponDamage(Player player, ref StatModifier damage)
+        {
+            if (player.GetModPlayer<Players.YonduPlayer>().yonduHelmetEquipped)
+            {
+                damage *= 2f;
+            }
         }
 
         public override bool CanUseItem(Player player)

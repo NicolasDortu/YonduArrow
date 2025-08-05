@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
 using YonduArrow.Content.Dusts;
+using YonduArrow.Content.Players;
 using static Terraria.ModLoader.ModContent;
 
 namespace YonduArrow.Content.Projectiles
@@ -14,7 +15,6 @@ namespace YonduArrow.Content.Projectiles
     {
         ///  TO DO: 
         ///  ability to ride the arrow
-        ///  Fix the RedTrail -> Behind the arrow + Middle centered
         public override void SetStaticDefaults()
         {
 
@@ -27,9 +27,9 @@ namespace YonduArrow.Content.Projectiles
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
             Projectile.penetrate = -1;
-            Projectile.light = 1f;
             Projectile.tileCollide = true;
             Projectile.ignoreWater = true;
+            Projectile.extraUpdates = 1;
         }
 
         // Draw the projectile glowmask
@@ -70,6 +70,9 @@ namespace YonduArrow.Content.Projectiles
 
         public override void AI()
         {
+            // Add red lighting effect
+            Lighting.AddLight(Projectile.Center, 0.2f, 0f, 0f);
+
             //// Play sound while moving
             //if (Projectile.soundDelay == 0 && Projectile.velocity.Length() > 2f)
             //{
@@ -78,7 +81,10 @@ namespace YonduArrow.Content.Projectiles
             //}
 
             // Draw the Red trail behind
-            if (Projectile.velocity.LengthSquared() > 0.001f)
+
+            // check if projectile.spritedirection could help
+
+            if (Projectile.velocity.LengthSquared() > 0.01f)
             {
                 lastDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             }
@@ -89,12 +95,13 @@ namespace YonduArrow.Content.Projectiles
                 int dustCount = 3;
                 float spacing = 6f;
 
+                // Vector2 tailOffset = direction * (Projectile.width / 2f);
                 if (Projectile.velocity != Vector2.Zero)
                 {
                     for (int i = 0; i < dustCount; i++)
                     {
                         Vector2 offset = direction * i * -spacing;
-                        Vector2 dustPos = Projectile.Center + offset;
+                        Vector2 dustPos = Projectile.Center + offset; //+ new Vector2(0f, -4f);
 
                         Dust dust = Dust.NewDustDirect(
                             dustPos,
@@ -105,19 +112,27 @@ namespace YonduArrow.Content.Projectiles
                         dust.scale = 1f;
                         dust.noGravity = true;
                         dust.velocity = Vector2.Zero;
-                        dust.rotation = direction.ToRotation() + MathHelper.PiOver2;
+                        dust.rotation = direction.ToRotation()+ MathHelper.PiOver2;
                         dust.fadeIn = 2.0f;
                         dust.color = new Color(255, 0, 0, 255);
                     }
                 }
 
-            // Similar to magic missile AI
-            if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
+
+                // Similar to magic missile AI
+                if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
                 {
                     Player player = Main.player[Projectile.owner];
                     // behavior durring channeling
                     if (player.channel)
                     {
+                        player.GetModPlayer<Players.YonduPlayer>().yonduArrowChanneled = true;
+                        // Debug
+                        //if (Main.myPlayer == Projectile.owner)
+                        //{
+                        //    var modPlayer = Main.player[Projectile.owner].GetModPlayer<Players.YonduPlayer>();
+                        //    Main.NewText($"yonduHelmetChanneled: {modPlayer.yonduArrowChanneled}");
+                        //}
                         float maxDistance = 18f;
                         Vector2 toCursor = Main.MouseWorld - Projectile.Center;
                         float dist = toCursor.Length();

@@ -1,6 +1,7 @@
 ﻿using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using YonduArrow.Content.Players;
 
 namespace YonduArrow.Content.Armor
 {
@@ -27,9 +28,16 @@ namespace YonduArrow.Content.Armor
             Item.width = 18; // Width of the item
             Item.height = 18; // Height of the item
             Item.value = Item.sellPrice(gold: 1); // How many coins the item is worth
-            Item.rare = ItemRarityID.Green; // The rarity of the item
+            Item.rare = ItemRarityID.LightPurple; // The rarity of the item
             Item.defense = 5; // The amount of defense the item will give when equipped
         }
+
+        public override void UpdateEquip(Player player)
+        {
+            player.GetModPlayer<Players.YonduPlayer>().yonduHelmetEquipped = true;
+        }
+
+        // Add glowmask if yonduArrowChanneled
 
         public override void AddRecipes()
         {
