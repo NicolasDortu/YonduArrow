@@ -13,8 +13,6 @@ namespace YonduArrow.Content.Projectiles
 {
     public class YonduArrowProjectile : ModProjectile
     {
-        ///  TO DO: 
-        ///  ability to ride the arrow
         public override void SetStaticDefaults()
         {
 
@@ -22,7 +20,7 @@ namespace YonduArrow.Content.Projectiles
 
         public override void SetDefaults()
         {
-            Projectile.width = 72; //108
+            Projectile.width = 72;
             Projectile.height = 14;
             Projectile.friendly = true;
             Projectile.DamageType = DamageClass.Ranged;
@@ -32,10 +30,11 @@ namespace YonduArrow.Content.Projectiles
             Projectile.extraUpdates = 1;
         }
 
-        // Draw the projectile glowmask
+        // ******** //
+        // Glowmask //
+        // ******** //
         public override void PostDraw(Color lightColor)
         {
-            // Load the glowmask texture
             Texture2D glowTexture = ModContent.Request<Texture2D>(
                 "YonduArrow/Content/Projectiles/YonduArrowProjectile_Glow",
                 ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
@@ -66,12 +65,21 @@ namespace YonduArrow.Content.Projectiles
             );
         }
 
+        // ******** //
+        // Behavior //
+        // ******** //
         private Vector2 lastDirection = Vector2.UnitX;
+        private Vector2 toCursor = Vector2.UnitX;
+        private bool isRidingArrow = false;
+        private int groundCollisionCounter = 0;
 
         public override void AI()
         {
-            // Add red lighting effect
-            Lighting.AddLight(Projectile.Center, 0.2f, 0f, 0f);
+            // Red lighting effect
+            Lighting.AddLight(Projectile.Center, 0.3f, 0f, 0f);
+
+            //if (groundCollisionCounter > 0)
+            //    groundCollisionCounter--;
 
             //// Play sound while moving
             //if (Projectile.soundDelay == 0 && Projectile.velocity.Length() > 2f)
@@ -80,15 +88,13 @@ namespace YonduArrow.Content.Projectiles
             //    SoundEngine.PlaySound(SoundID.Item39, Projectile.position);
             //}
 
-            // Draw the Red trail behind
-
+            // Dust
             // check if projectile.spritedirection could help
-
             if (Projectile.velocity.LengthSquared() > 0.01f)
             {
                 lastDirection = Projectile.velocity.SafeNormalize(Vector2.UnitX);
             }
-            // Using the last known direction
+
             {
                 Vector2 direction = lastDirection;
 
@@ -119,26 +125,73 @@ namespace YonduArrow.Content.Projectiles
                 }
 
 
-                // Similar to magic missile AI
+                // Behavior
                 if (Main.myPlayer == Projectile.owner && Projectile.ai[0] == 0f)
                 {
                     Player player = Main.player[Projectile.owner];
-                    // behavior durring channeling
+                    // Behavior durring channeling
                     if (player.channel)
                     {
+                        Projectile.timeLeft = 2; // avoid despawning the arrow after 30 seconds
                         player.GetModPlayer<Players.YonduPlayer>().yonduArrowChanneled = true;
-                        // Debug
-                        //if (Main.myPlayer == Projectile.owner)
-                        //{
-                        //    var modPlayer = Main.player[Projectile.owner].GetModPlayer<Players.YonduPlayer>();
-                        //    Main.NewText($"yonduHelmetChanneled: {modPlayer.yonduArrowChanneled}");
-                        //}
-                        float maxDistance = 18f;
-                        Vector2 toCursor = Main.MouseWorld - Projectile.Center;
-                        float dist = toCursor.Length();
-                        if (dist > maxDistance)
+                        bool hasHat = player.GetModPlayer<Players.YonduPlayer>().yonduHelmetEquipped;
+
+                        // Riding Arrow behavior
+                        Rectangle arrowHitbox = Projectile.Hitbox;
+                        Rectangle playerHitbox = player.Hitbox;
+
+                        if (player.controlUp && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter == 0 && hasHat)
                         {
-                            toCursor *= maxDistance / dist;
+                            isRidingArrow = true;
+                        }
+                        else if (groundCollisionCounter > 0 && hasHat)
+                        {
+                            if (player.controlUp && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter > 90)
+                                player.velocity.Y = -3f; // avoid getting stuck in the ground
+                            isRidingArrow = false;
+                            groundCollisionCounter--;
+                        }
+
+                        if (isRidingArrow)
+                        {
+                            // Limit arrow speed while riding
+                            float maxRideSpeed = 7f;
+                            Vector2 toCursor = Main.MouseWorld - Projectile.Center;
+                            float dist = toCursor.Length();
+                            if (dist > maxRideSpeed)
+                            {
+                                toCursor *= maxRideSpeed / dist;
+                            }
+
+                            Projectile.velocity = toCursor;
+
+                            float handOffsetY = 35f; // Offset to looks like it's holding the arrow
+                            player.position = new Vector2(
+                                Projectile.Center.X - player.width / 2f,
+                                Projectile.Center.Y + handOffsetY - player.height
+                            );
+                            player.velocity = Vector2.Zero;
+
+                            player.noFallDmg = true;
+
+                            // Face direction of arrow
+                            if (Projectile.velocity.X != 0)
+                                player.direction = Projectile.velocity.X > 0 ? 1 : -1;
+
+                            if (!player.controlUp)
+                                isRidingArrow = false;
+                        }
+                        else
+                        {
+                            // Non-riding behavior
+                            float maxDistance = 18f;
+                            Vector2 toCursor = Main.MouseWorld - Projectile.Center;
+                            float dist = toCursor.Length();
+                            if (dist > maxDistance)
+                            {
+                                toCursor *= maxDistance / dist * 0.9f;
+                            }
+                            Projectile.velocity = toCursor;
                         }
 
                         int vx = (int)(toCursor.X * 1000f);
@@ -148,8 +201,6 @@ namespace YonduArrow.Content.Projectiles
 
                         if (vx != ovx || vy != ovy)
                             Projectile.netUpdate = true;
-
-                        Projectile.velocity = toCursor;
 
                         // face the arrow in the pointed direction
                         if (Projectile.velocity != Vector2.Zero)
@@ -182,19 +233,21 @@ namespace YonduArrow.Content.Projectiles
                         Projectile.rotation = Projectile.velocity.ToRotation();
 
                         Projectile.ai[0] = 1f;
-                        Projectile.timeLeft = 180;
+                        Projectile.timeLeft = 400;
                     }
                 }
             }
         }
 
+        // ********* //
+        // Collision //
+        // ********* //
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
 
             Collision.HitTiles(Projectile.position, Projectile.velocity, Projectile.width, Projectile.height);
             //SoundEngine.PlaySound(SoundID.Item10, Projectile.position);
 
-            // Retrieve is the player is channeling
             Player player = Main.player[Projectile.owner];
 
             // If the projectile hits the left or right side of the tile, reverse the X velocity
@@ -207,6 +260,7 @@ namespace YonduArrow.Content.Projectiles
             if (Math.Abs(Projectile.velocity.Y - oldVelocity.Y) > float.Epsilon)
             {
                 Projectile.velocity.Y = -oldVelocity.Y - 1;
+                groundCollisionCounter = 100;
             }
 
             // Only update rotation when NOT channeling

@@ -1,12 +1,12 @@
 Items: {
 	YonduArrow: {
 		DisplayName: Yondu Arrow
-		Tooltip: A controllable and rideable piercing arrow
+		Tooltip: A controllable piercing arrow
 	}
 
 	YonduHelmet: {
 		DisplayName: Yondu Helmet
-		Tooltip: A helmet that allows you to control the Yondu Arrow more effectively
+		Tooltip: A helmet that allows you to ride the Yondu Arrow by pressing the up key and double the damages
 	}
 }
 
