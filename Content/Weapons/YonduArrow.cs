@@ -19,7 +19,7 @@ namespace YonduArrow.Content.Weapons
             Item.useAnimation = 1;
             Item.useStyle = ItemUseStyleID.Rapier;
             Item.noMelee = true;
-            Item.channel = true; //Channel so that you can held the weapon [Important]
+            Item.channel = true;
             Item.knockBack = 8;
             Item.value = Item.sellPrice(platinum: 5);
             Item.rare = ItemRarityID.Purple;
