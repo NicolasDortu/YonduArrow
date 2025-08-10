@@ -145,7 +145,7 @@ namespace YonduArrow.Content.Projectiles
                     }
                     else if (groundCollisionCounter > 0 && hasHat)
                     {
-                        if (player.controlUp && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter > collisionCounterValue * 0.8f)
+                        if (isRidingArrow && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter > collisionCounterValue * 0.8f)
                             player.velocity.Y = -3f; // avoid getting stuck in the ground
                         isRidingArrow = false;
                         groundCollisionCounter--;
@@ -153,6 +153,7 @@ namespace YonduArrow.Content.Projectiles
 
                     if (isRidingArrow)
                     {
+                        player.GetModPlayer<Players.YonduPlayer>().yonduIsRiding = true;
                         // Limit arrow speed while riding
                         float maxRideSpeed = 10f;
                         float minRideDistance = 5f;
@@ -184,7 +185,7 @@ namespace YonduArrow.Content.Projectiles
                         if (Projectile.velocity.X != 0)
                             player.direction = Projectile.velocity.X > 0 ? 1 : -1;
 
-                        if (!player.controlUp)
+                        if (player.controlDown && isRidingArrow)
                             isRidingArrow = false;
                     }
                     else

@@ -39,9 +39,8 @@ namespace YonduArrow.Content.Armor
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.IronOre, 100)
-                .AddIngredient(ItemID.MythrilBar, 10)
-                .AddIngredient(ItemID.Amethyst, 50)
+                .AddIngredient(ItemID.MythrilBar, 5)
+                .AddIngredient(ItemID.Ruby, 50)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

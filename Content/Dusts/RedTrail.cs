@@ -11,9 +11,16 @@ namespace YonduArrow.Content.Dusts
         }
         public override bool Update(Dust dust)
         {
+            Player player = Main.LocalPlayer;
+            var isRiding = player.GetModPlayer<Players.YonduPlayer>().yonduIsRiding;
+
             // custom counter to add a delay before drawing the dust
             if (dust.customData == null)
-                dust.customData = 0;
+                if (isRiding)
+                    dust.customData = -1; // add more delay if riding the arrow
+                else
+                    dust.customData = 0;
+
             dust.customData = (int)dust.customData + 1;
 
             return true;
