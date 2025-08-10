@@ -6,7 +6,7 @@ Items: {
 
 	YonduHelmet: {
 		DisplayName: Yondu Helmet
-		Tooltip: A helmet that allows you to ride the Yondu Arrow by pressing the up key and double the damages
+		Tooltip: A helmet that double the damages and allows you to ride the Yondu Arrow by pressing the up key
 	}
 }
 

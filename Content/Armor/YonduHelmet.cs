@@ -1,26 +1,15 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using YonduArrow.Content.Players;
 
 namespace YonduArrow.Content.Armor
 {
     [AutoloadEquip(EquipType.Head)]
     public class YonduHelmet : ModItem
     {
-        // public static readonly int AdditiveGenericDamageBonus = 20;
-
-        // public static LocalizedText SetBonusText { get; private set; }
-
         public override void SetStaticDefaults()
         {
-            // If your head equipment should draw hair while drawn, use one of the following:
-            // ArmorIDs.Head.Sets.DrawHead[Item.headSlot] = false; // Don't draw the head at all. Used by Space Creature Mask
-            // ArmorIDs.Head.Sets.DrawHatHair[Item.headSlot] = true; // Draw hair as if a hat was covering the top. Used by Wizards Hat
-            // ArmorIDs.Head.Sets.DrawFullHair[Item.headSlot] = true; // Draw all hair as normal. Used by Mime Mask, Sunglasses
-            // ArmorIDs.Head.Sets.DrawsBackHairWithoutHeadgear[Item.headSlot] = true;
-
-            // SetBonusText = this.GetLocalization("SetBonus").WithFormatArgs(AdditiveGenericDamageBonus);
         }
 
         public override void SetDefaults()
@@ -37,12 +26,22 @@ namespace YonduArrow.Content.Armor
             player.GetModPlayer<Players.YonduPlayer>().yonduHelmetEquipped = true;
         }
 
-        // Add glowmask if yonduArrowChanneled
+        public override void DrawArmorColor(Player drawPlayer, float shadow, ref Color color, ref int glowMask, ref Color glowMaskColor)
+        {
+            var yonduPlayer = drawPlayer.GetModPlayer<Players.YonduPlayer>();
+            if (yonduPlayer.yonduArrowChanneled)
+            {
+                Lighting.AddLight(drawPlayer.Top, 1f, 0.2f, 0.2f);
+                color = Color.Lerp(color, Color.Red, 1f);
+            }
+        }
 
         public override void AddRecipes()
         {
             CreateRecipe()
-                .AddIngredient(ItemID.WoodenArrow, 100)
+                .AddIngredient(ItemID.IronOre, 100)
+                .AddIngredient(ItemID.MythrilBar, 10)
+                .AddIngredient(ItemID.Amethyst, 50)
                 .AddTile(TileID.MythrilAnvil)
                 .Register();
         }

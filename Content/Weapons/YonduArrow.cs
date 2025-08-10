@@ -1,9 +1,7 @@
-﻿using System;
-using Terraria;
+﻿using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
-using static Terraria.ModLoader.ModContent;
 
 namespace YonduArrow.Content.Weapons
 {
@@ -12,7 +10,7 @@ namespace YonduArrow.Content.Weapons
         public override void SetDefaults()
         {
             Item.damage = 35;
-            Item.mana = 14;
+            Item.mana = 20;
             Item.width = 72;
             Item.height = 14;
             Item.useTime = 15;

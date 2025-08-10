@@ -2,12 +2,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
 using Terraria.ModLoader;
 using YonduArrow.Content.Dusts;
-using YonduArrow.Content.Players;
-using static Terraria.ModLoader.ModContent;
 
 namespace YonduArrow.Content.Projectiles
 {
@@ -76,13 +72,6 @@ namespace YonduArrow.Content.Projectiles
         {
             // Red lighting effect
             Lighting.AddLight(Projectile.Center, 0.3f, 0f, 0f);
-
-            //// Play sound while moving
-            //if (Projectile.soundDelay == 0 && Projectile.velocity.Length() > 2f)
-            //{
-            //    Projectile.soundDelay = 10;
-            //    SoundEngine.PlaySound(SoundID.Item39, Projectile.position);
-            //}
 
             // Dust
             // Issue is that the dust starts at the center but using an offset break the smoothness
@@ -156,7 +145,7 @@ namespace YonduArrow.Content.Projectiles
                     }
                     else if (groundCollisionCounter > 0 && hasHat)
                     {
-                        if (player.controlUp && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter > 90)
+                        if (player.controlUp && arrowHitbox.Intersects(playerHitbox) && groundCollisionCounter > collisionCounterValue * 0.8f)
                             player.velocity.Y = -3f; // avoid getting stuck in the ground
                         isRidingArrow = false;
                         groundCollisionCounter--;
@@ -254,16 +243,16 @@ namespace YonduArrow.Content.Projectiles
                 }
             }
         }
-        
+
 
         // ********* //
         // Collision //
         // ********* //
+        private int collisionCounterValue = 50;
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
 
             Collision.HitTiles(Projectile.position, Projectile.velocity, Projectile.width, Projectile.height);
-            //SoundEngine.PlaySound(SoundID.Item10, Projectile.position);
 
             Player player = Main.player[Projectile.owner];
 
@@ -277,7 +266,7 @@ namespace YonduArrow.Content.Projectiles
             if (Math.Abs(Projectile.velocity.Y - oldVelocity.Y) > float.Epsilon)
             {
                 Projectile.velocity.Y = -oldVelocity.Y - 1;
-                groundCollisionCounter = 100;
+                groundCollisionCounter = collisionCounterValue;
             }
 
             // Only update rotation when NOT channeling
